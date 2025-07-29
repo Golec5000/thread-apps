@@ -18,6 +18,6 @@ public class HelloController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         gameEngine = new GameEngine(drawingPane);
-        gameEngine.run();
+        gameEngine.start();
     }
 }
