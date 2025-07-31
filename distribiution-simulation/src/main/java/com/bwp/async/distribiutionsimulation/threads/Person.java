@@ -22,7 +22,7 @@ public class Person extends Thread {
 
     public Person(GridElement element){
         gridElement = element;
-        speed = new SecureRandom().nextInt(1000, 2000);
+        speed = new SecureRandom().nextInt(100, 700);
         color = Color.BLUE;
         isRunning = true;
         toErase = false;
@@ -33,6 +33,11 @@ public class Person extends Thread {
     public void run() {
         while (isRunning){
             move();
+            try {
+                sleep(speed);
+            } catch (InterruptedException e) {
+                System.out.println(e);
+            }
         }
     }
 
@@ -40,18 +45,18 @@ public class Person extends Thread {
         int nextX = gridElement.getC_x() + direction.getX();
         int nextY = gridElement.getC_y() + direction.getY();
 
-        System.out.println("X: " + gridElement.getX() + " Y: " + gridElement.getY());
+        System.out.println("X: " + gridElement.getC_x() + " Y: " + gridElement.getC_y());
 
-        GridElement nextElement = map.getGrid().get(nextX).get(nextY);
+        GridElement nextElement = map.getGrid().get(nextY).get(nextX);
         nextElement.canMove(this);
 
         lastMove();
     }
 
     private void lastMove() {
-        if (gridElement.getC_x() < MAP_WIDTH.getVaule() - 1) return;
+        if (gridElement.getC_x() < MAP_WIDTH.getValue() - 1) return;
         isRunning = false;
-        toErase = true;
+//        toErase = true;
     }
 
     public Color getColor() {

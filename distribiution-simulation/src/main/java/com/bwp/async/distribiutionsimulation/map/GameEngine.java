@@ -41,7 +41,7 @@ public class GameEngine {
 
     private synchronized void createClients() {
         if (!clients.isEmpty()) return;
-        GridElement statElement = map.getGrid().get(MAP_MID_POINT_Y.getVaule()).get(0);
+        GridElement statElement = map.getGrid().get(MAP_MID_POINT_Y.getValue()).get(0);
         Person person = new Person(statElement);
         statElement.setFill(person.getColor());
         clients.addLast(person);
