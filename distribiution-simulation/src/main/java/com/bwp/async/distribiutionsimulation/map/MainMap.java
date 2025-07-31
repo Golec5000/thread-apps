@@ -45,7 +45,7 @@ public class MainMap {
         return grid;
     }
 
-    public void renderMap(AnchorPane drawingPane) {
+    public synchronized void renderMap(AnchorPane drawingPane) {
         //Basic map part
         renderUpLane();
         renderMidLane();

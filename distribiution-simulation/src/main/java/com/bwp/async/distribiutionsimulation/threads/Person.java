@@ -42,10 +42,10 @@ public class Person extends Thread {
     }
 
     private void move() {
-        int nextX = gridElement.getC_x() + direction.getX();
-        int nextY = gridElement.getC_y() + direction.getY();
+        int nextX = gridElement.getCordX() + direction.getX();
+        int nextY = gridElement.getCordY() + direction.getY();
 
-        System.out.println("X: " + gridElement.getC_x() + " Y: " + gridElement.getC_y());
+        System.out.println("X: " + gridElement.getCordX() + " Y: " + gridElement.getCordY());
 
         GridElement nextElement = map.getGrid().get(nextY).get(nextX);
         nextElement.canMove(this);
@@ -54,7 +54,7 @@ public class Person extends Thread {
     }
 
     private void lastMove() {
-        if (gridElement.getC_x() < MAP_WIDTH.getValue() - 1) return;
+        if (gridElement.getCordX() < MAP_WIDTH.getValue() - 1) return;
         isRunning = false;
 //        toErase = true;
     }

@@ -4,6 +4,7 @@ import com.bwp.async.distribiutionsimulation.threads.Person;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.scene.layout.AnchorPane;
 import javafx.util.Duration;
 
@@ -24,7 +25,7 @@ public class GameEngine {
     }
 
     public void start() {
-        gameLoop = new Timeline(new KeyFrame(Duration.millis(200), e -> playSimulation()));
+        gameLoop = new Timeline(new KeyFrame(Duration.millis(50), e -> playSimulation()));
         gameLoop.setCycleCount(Animation.INDEFINITE);
         gameLoop.play();
     }
@@ -43,7 +44,7 @@ public class GameEngine {
         if (!clients.isEmpty()) return;
         GridElement statElement = map.getGrid().get(MAP_MID_POINT_Y.getValue()).get(0);
         Person person = new Person(statElement);
-        statElement.setFill(person.getColor());
+        Platform.runLater(() -> statElement.setFill(person.getColor()));
         clients.addLast(person);
         clients.getLast().start();
     }
