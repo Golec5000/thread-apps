@@ -75,8 +75,8 @@ public class MainMap {
         gc.clearRect(0, 0, gc.getCanvas().getWidth(), gc.getCanvas().getHeight());
 
         renderLanes();
-        clients.stream()
-                .filter(Person::isAlive)
+        grid.get(MAP_MID_POINT_Y).get(MAP_MID_POINT_X).setColor(MAP_SWITCH_DIRECTION.get().getColor());
+        clients.stream().filter(Person::isAlive)
                 .forEach(client -> client.getGridElement().setColor(client.getColor()));
         grid.forEach(row -> row.forEach(el -> setElementInGrid(gc, el)));
     }

@@ -27,6 +27,9 @@ public class HelloController implements Initializable {
     private Label limitThreadLabel;
 
     @FXML
+    private Label switchStatusLabel;
+
+    @FXML
     private Label generatorStatusLabel;
 
     @FXML
@@ -45,13 +48,14 @@ public class HelloController implements Initializable {
 
         gameEngine = new GameEngine(drawingCanvas);
         gameEngine.setThreadsLabel(threadsLabel);
+        gameEngine.setSwitchStatusLabel(switchStatusLabel);
+        gameEngine.getGenerator().setLimit((int) maxClientsInput.getValue());
         gameEngine.start();
 
-        gameEngine.getGenerator().setLimit((int) maxClientsInput.getValue());
         maxClientsInput.valueProperty().addListener((observableValue, number, t1) -> {
             int limit = (int) maxClientsInput.getValue();
-            Platform.runLater(() -> limitThreadLabel.setText("Thread limit: " + limit));
             gameEngine.getGenerator().setLimit(limit);
+            Platform.runLater(() -> limitThreadLabel.setText("Thread limit: " + limit));
         });
     }
 
