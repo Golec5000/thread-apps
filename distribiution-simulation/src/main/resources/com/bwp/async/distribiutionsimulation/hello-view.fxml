@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
+<?import javafx.scene.canvas.Canvas?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.layout.AnchorPane?>
 
 <VBox alignment="CENTER" spacing="20.0" xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.bwp.async.distribiutionsimulation.HelloController">
 
-    <AnchorPane fx:id="drawingPane" prefWidth="800" prefHeight="600" />
+    <Canvas fx:id="drawingCanvas" width="600" height="450"/>
 
 </VBox>
