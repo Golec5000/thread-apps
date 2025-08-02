@@ -1,47 +1,34 @@
 package com.bwp.async.distribiutionsimulation.map;
 
-import com.bwp.async.distribiutionsimulation.threads.Person;
-import javafx.application.Platform;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
 
-public class GridElement extends Rectangle {
+import static com.bwp.async.distribiutionsimulation.util.MapMainValues.DEFAULT_COLOR;
+import static com.bwp.async.distribiutionsimulation.util.MapMainValues.LINES_COLOR;
+
+public class GridElement {
     private static final double DIM = 15.0;
 
     private final int cordX;
     private final int cordY;
 
-    private boolean isOccupied;
+    private Color color = DEFAULT_COLOR;
+    private boolean isOccupied = false;
 
-    public GridElement(double x, double y, Color color, int cX, int cY) {
-        super(DIM, DIM); // ustawia szerokość i wysokość
-        cordX = cX;
-        cordY = cY;
-        this.isOccupied = false;
+    public GridElement(int x, int y) {
+        this.cordX = x;
+        this.cordY = y;
+    }
 
-        setX(x);
-        setY(y);
-        setFill(color);              // kolor wypełnienia
-        setStroke(Color.GRAY);       // kolor obramowania
-        setStrokeWidth(0.5);         // grubość obramowania
+    public double getX() {
+        return cordX * DIM;
+    }
+
+    public double getY() {
+        return cordY * DIM;
     }
 
     public static double getDIM() {
         return DIM;
-    }
-
-    public synchronized boolean canMove(Person person) {
-        person.setGridElement(this);
-        Platform.runLater(() -> setFill(person.getColor()));
-        return true;
-    }
-
-    public boolean isOccupied() {
-        return isOccupied;
-    }
-
-    public void setOccupied(boolean occupied) {
-        isOccupied = occupied;
     }
 
     public int getCordX() {
@@ -50,5 +37,25 @@ public class GridElement extends Rectangle {
 
     public int getCordY() {
         return cordY;
+    }
+
+    public Color getColor() {
+        return color;
+    }
+
+    public void setColor(Color color) {
+        this.color = color;
+    }
+
+    public void resetColor(){
+        this.color = LINES_COLOR;
+    }
+
+    public boolean isOccupied() {
+        return isOccupied;
+    }
+
+    public void setOccupied(boolean occupied) {
+        isOccupied = occupied;
     }
 }

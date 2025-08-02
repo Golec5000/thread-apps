@@ -1,58 +1,126 @@
 package com.bwp.async.distribiutionsimulation.map;
 
 import com.bwp.async.distribiutionsimulation.threads.Person;
-import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
-import javafx.application.Platform;
-import javafx.scene.layout.AnchorPane;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.skin.TableHeaderRow;
 import javafx.util.Duration;
 
+import java.security.SecureRandom;
 import java.util.LinkedList;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-import static com.bwp.async.distribiutionsimulation.util.MapMainPoints.MAP_MID_POINT_Y;
+import static com.bwp.async.distribiutionsimulation.util.MapMainValues.MAP_MID_POINT_Y;
+import static java.lang.Thread.*;
+import static java.lang.Thread.sleep;
 
 public class GameEngine {
 
-    private final AnchorPane drawingPane;
+    private final GraphicsContext gc;
     private final MainMap map = MainMap.getInstance();
-    private final LinkedList<Thread> clients = new LinkedList<>();
+    private final LinkedList<Person> clients = new LinkedList<>();
+    private Thread clientCreator;
+    private Thread clientRemover;
 
     private Timeline gameLoop;
 
-    public GameEngine(AnchorPane drawingPane) {
-        this.drawingPane = drawingPane;
+    private final AtomicBoolean running = new AtomicBoolean(false);
+
+    public GameEngine(Canvas drawingCanvas) {
+        this.gc = drawingCanvas.getGraphicsContext2D();
     }
 
     public void start() {
-        gameLoop = new Timeline(new KeyFrame(Duration.millis(50), e -> playSimulation()));
-        gameLoop.setCycleCount(Animation.INDEFINITE);
+        if (running.get()) return;
+
+        running.set(true);
+
+        // startuje główną pętlę gry (renderowanie)
+        gameLoop = new Timeline(new KeyFrame(Duration.millis(16), e -> map.renderMap(gc, clients)));
+        gameLoop.setCycleCount(Timeline.INDEFINITE);
         gameLoop.play();
+
+        // startuje tylko jeden wątek klienta
+        clientThreadGenerator();
+        clientThreadRemover();
     }
 
-    private void playSimulation() {
-        map.renderMap(drawingPane);
-        createClients();
-        removeClients();
+    private void clientThreadGenerator() {
+        clientCreator = new Thread(() -> {
+            while (running.get()) {
+                createClients();
+                try {
+                    sleep(new SecureRandom().nextInt(200, 2000));
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    System.out.println("ClientCreator przerwany.");
+                }
+            }
+        });
+        clientCreator.setDaemon(true);
+        clientCreator.start();
     }
 
-    private synchronized void removeClients() {
-        clients.removeIf(client -> !client.isAlive());
+    private void clientThreadRemover() {
+        clientRemover = new Thread(() -> {
+            while (running.get()) {
+                clients.removeIf(client -> !client.isAlive());
+                try {
+                    sleep(new SecureRandom().nextInt(100));
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    System.out.println("ClientCreator przerwany.");
+                }
+            }
+        });
+        clientRemover.setDaemon(true);
+        clientRemover.start();
     }
 
     private synchronized void createClients() {
-        if (!clients.isEmpty()) return;
-        GridElement statElement = map.getGrid().get(MAP_MID_POINT_Y.getValue()).get(0);
+        if (clients.size() > 10) return;
+        GridElement statElement = map.getGrid().get(MAP_MID_POINT_Y).get(0);
         Person person = new Person(statElement);
-        Platform.runLater(() -> statElement.setFill(person.getColor()));
+        statElement.setColor(person.getColor());
         clients.addLast(person);
         clients.getLast().start();
     }
 
     public void stop() {
+        running.set(false);
+
         if (gameLoop != null) {
             gameLoop.stop();
         }
-    }
 
+        if (clientCreator != null && clientCreator.isAlive()) {
+            try {
+                clientCreator.join();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                System.err.println("Błąd przy joinowaniu clientCreator.");
+            }
+        }
+
+        if (clientRemover != null && clientRemover.isAlive()) {
+            try {
+                clientRemover.join();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                System.err.println("Błąd przy joinowaniu clientCreator.");
+            }
+        }
+
+        // kończy wszystkie osoby
+        synchronized (this) {
+            for (Person person : clients) {
+                person.interrupt();
+            }
+        }
+
+        clients.clear();
+    }
 }

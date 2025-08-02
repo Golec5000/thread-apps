@@ -6,8 +6,10 @@ import com.bwp.async.distribiutionsimulation.util.Direction;
 import javafx.scene.paint.Color;
 
 import java.security.SecureRandom;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-import static com.bwp.async.distribiutionsimulation.util.MapMainPoints.MAP_WIDTH;
+import static com.bwp.async.distribiutionsimulation.util.Direction.*;
+import static com.bwp.async.distribiutionsimulation.util.MapMainValues.*;
 
 public class Person extends Thread {
 
@@ -17,54 +19,58 @@ public class Person extends Thread {
 
     private GridElement gridElement;
     private Direction direction;
-    private boolean isRunning;
-    private boolean toErase;
+    private AtomicBoolean isRunning;
 
     public Person(GridElement element){
         gridElement = element;
         speed = new SecureRandom().nextInt(100, 700);
         color = Color.BLUE;
-        isRunning = true;
-        toErase = false;
-        direction = Direction.STRAIGHT;
+        isRunning = new AtomicBoolean(true);
+        direction = STRAIGHT;
+        setDaemon(true);
     }
 
     @Override
     public void run() {
-        while (isRunning){
+        while (isRunning.get() && !isInterrupted()){
             move();
             try {
                 sleep(speed);
             } catch (InterruptedException e) {
-                System.out.println(e);
+                Thread.currentThread().interrupt();
+                System.err.println(this.getName() + " przerwany");
             }
         }
     }
 
     private void move() {
+
+        if(!isRunning.get()) return;
+
+        if(gridElement.getCordX() == 0 || gridElement.getCordX() == MAP_HEIGHT - 1) direction = STRAIGHT;
+
         int nextX = gridElement.getCordX() + direction.getX();
         int nextY = gridElement.getCordY() + direction.getY();
 
         System.out.println("X: " + gridElement.getCordX() + " Y: " + gridElement.getCordY());
 
         GridElement nextElement = map.getGrid().get(nextY).get(nextX);
-        nextElement.canMove(this);
+        this.setGridElement(nextElement);
 
         lastMove();
     }
 
     private void lastMove() {
-        if (gridElement.getCordX() < MAP_WIDTH.getValue() - 1) return;
-        isRunning = false;
-//        toErase = true;
+        if (gridElement.getCordX() < MAP_WIDTH - 1) return;
+        isRunning.set(false);
     }
 
     public Color getColor() {
         return color;
     }
 
-    public boolean isRunning() {
-        return isRunning;
+    public GridElement getGridElement() {
+        return gridElement;
     }
 
     public void setGridElement(GridElement gridElement) {
@@ -75,7 +81,15 @@ public class Person extends Thread {
         this.direction = direction;
     }
 
-    public void setRunning(boolean running) {
-        isRunning = running;
+    @Override
+    public void interrupt(){
+        try {
+            isRunning.set(false);
+            this.join();
+            System.out.println("Person " + this.getName() + " finish");
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            System.err.println("Błąd przy joinowaniu Person.");
+        }
     }
 }
