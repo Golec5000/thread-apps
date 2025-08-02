@@ -47,6 +47,7 @@ public class HelloController implements Initializable {
         gameEngine.setThreadsLabel(threadsLabel);
         gameEngine.start();
 
+        gameEngine.getGenerator().setLimit((int) maxClientsInput.getValue());
         maxClientsInput.valueProperty().addListener((observableValue, number, t1) -> {
             int limit = (int) maxClientsInput.getValue();
             Platform.runLater(() -> limitThreadLabel.setText("Thread limit: " + limit));

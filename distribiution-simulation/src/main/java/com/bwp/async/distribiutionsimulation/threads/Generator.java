@@ -20,7 +20,6 @@ public class Generator extends Thread {
         isRunning = new AtomicBoolean(true);
         this.setDaemon(true);
         this.clients = clients;
-        limit = 10;
     }
 
     @Override
