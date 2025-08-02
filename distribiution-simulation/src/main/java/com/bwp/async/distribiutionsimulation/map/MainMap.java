@@ -7,6 +7,7 @@ import javafx.scene.paint.Color;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.IntStream;
 
 import static com.bwp.async.distribiutionsimulation.util.MapMainValues.*;
 
@@ -39,9 +40,7 @@ public class MainMap {
         List<List<GridElement>> grid = new ArrayList<>(MAP_HEIGHT);
         for (int y = 0; y < MAP_HEIGHT; y++) {
             List<GridElement> row = new ArrayList<>(MAP_WIDTH);
-            for (int x = 0; x < MAP_WIDTH; x++) {
-                row.add(new GridElement(x, y));
-            }
+            for (int x = 0; x < MAP_WIDTH; x++) row.add(new GridElement(x, y));
             grid.add(row);
         }
 
@@ -56,25 +55,19 @@ public class MainMap {
     }
 
     private void renderUpLane() {
-        for (int i = MAP_MID_POINT_Y; i >= 0; i--)
-            grid.get(i).get(MAP_MID_POINT_X).setColor(LINES_COLOR);
-        for (int i = MAP_MID_POINT_X; i < MAP_WIDTH; i++)
-            grid.get(0).get(i).setColor(LINES_COLOR);
+        IntStream.iterate(MAP_MID_POINT_Y, i -> i >= 0, i -> i - 1).forEachOrdered(i -> grid.get(i).get(MAP_MID_POINT_X).setColor(LINES_COLOR));
+        IntStream.range(MAP_MID_POINT_X, MAP_WIDTH).forEachOrdered(i -> grid.get(0).get(i).setColor(LINES_COLOR));
         grid.get(0).get(MAP_WIDTH - 1).setColor(MAIN_POINTS_COLOR);
     }
 
     private void renderBottomLane() {
-        for (int i = MAP_MID_POINT_Y; i < MAP_HEIGHT; i++)
-            grid.get(i).get(MAP_MID_POINT_X).setColor(LINES_COLOR);
-        for (int i = MAP_MID_POINT_X; i < MAP_WIDTH; i++)
-            grid.get(MAP_HEIGHT - 1).get(i).setColor(LINES_COLOR);
+        IntStream.range(MAP_MID_POINT_Y, MAP_HEIGHT).forEachOrdered(i -> grid.get(i).get(MAP_MID_POINT_X).setColor(LINES_COLOR));
+        IntStream.range(MAP_MID_POINT_X, MAP_WIDTH).forEachOrdered(i -> grid.get(MAP_HEIGHT - 1).get(i).setColor(LINES_COLOR));
         grid.get(MAP_HEIGHT - 1).get(MAP_WIDTH - 1).setColor(MAIN_POINTS_COLOR);
     }
 
     private void renderMidLane() {
-        for (GridElement el : grid.get(MAP_MID_POINT_Y)) {
-            el.setColor(LINES_COLOR);
-        }
+        grid.get(MAP_MID_POINT_Y).forEach(el -> el.setColor(LINES_COLOR));
         grid.get(MAP_MID_POINT_Y).get(MAP_WIDTH - 1).setColor(MAIN_POINTS_COLOR);
     }
 

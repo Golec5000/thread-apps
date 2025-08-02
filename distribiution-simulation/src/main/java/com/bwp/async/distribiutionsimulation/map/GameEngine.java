@@ -1,10 +1,13 @@
 package com.bwp.async.distribiutionsimulation.map;
 
+import com.bwp.async.distribiutionsimulation.threads.Generator;
 import com.bwp.async.distribiutionsimulation.threads.Person;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.Label;
 import javafx.scene.control.skin.TableHeaderRow;
 import javafx.util.Duration;
 
@@ -22,10 +25,12 @@ public class GameEngine {
     private final GraphicsContext gc;
     private final MainMap map = MainMap.getInstance();
     private final LinkedList<Person> clients = new LinkedList<>();
-    private Thread clientCreator;
+    private final Generator generator = new Generator(clients);
     private Thread clientRemover;
 
     private Timeline gameLoop;
+
+    private Label threadsLabel;
 
     private final AtomicBoolean running = new AtomicBoolean(false);
 
@@ -39,29 +44,16 @@ public class GameEngine {
         running.set(true);
 
         // startuje główną pętlę gry (renderowanie)
-        gameLoop = new Timeline(new KeyFrame(Duration.millis(16), e -> map.renderMap(gc, clients)));
+        gameLoop = new Timeline(new KeyFrame(Duration.millis(16), e -> {
+            map.renderMap(gc, clients);
+            Platform.runLater(() -> threadsLabel.setText("Wątki klientów: " + clients.size()));
+        }));
         gameLoop.setCycleCount(Timeline.INDEFINITE);
         gameLoop.play();
 
         // startuje tylko jeden wątek klienta
-        clientThreadGenerator();
+        generator.start();
         clientThreadRemover();
-    }
-
-    private void clientThreadGenerator() {
-        clientCreator = new Thread(() -> {
-            while (running.get()) {
-                createClients();
-                try {
-                    sleep(new SecureRandom().nextInt(200, 2000));
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    System.out.println("ClientCreator przerwany.");
-                }
-            }
-        });
-        clientCreator.setDaemon(true);
-        clientCreator.start();
     }
 
     private void clientThreadRemover() {
@@ -80,30 +72,12 @@ public class GameEngine {
         clientRemover.start();
     }
 
-    private synchronized void createClients() {
-        if (clients.size() > 10) return;
-        GridElement statElement = map.getGrid().get(MAP_MID_POINT_Y).get(0);
-        Person person = new Person(statElement);
-        statElement.setColor(person.getColor());
-        clients.addLast(person);
-        clients.getLast().start();
-    }
-
     public void stop() {
         running.set(false);
 
-        if (gameLoop != null) {
-            gameLoop.stop();
-        }
+        if (gameLoop != null) gameLoop.stop();
 
-        if (clientCreator != null && clientCreator.isAlive()) {
-            try {
-                clientCreator.join();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                System.err.println("Błąd przy joinowaniu clientCreator.");
-            }
-        }
+        if (generator.isAlive()) generator.interrupt();
 
         if (clientRemover != null && clientRemover.isAlive()) {
             try {
@@ -116,11 +90,16 @@ public class GameEngine {
 
         // kończy wszystkie osoby
         synchronized (this) {
-            for (Person person : clients) {
-                person.interrupt();
-            }
+            clients.forEach(Person::interrupt);
+            clients.clear();
         }
+    }
 
-        clients.clear();
+    public void setThreadsLabel(Label threadsLabel) {
+        this.threadsLabel = threadsLabel;
+    }
+
+    public Generator getGenerator() {
+        return generator;
     }
 }

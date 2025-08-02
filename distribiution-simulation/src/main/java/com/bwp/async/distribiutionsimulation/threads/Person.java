@@ -16,23 +16,22 @@ public class Person extends Thread {
     private final int speed;
     private final MainMap map = MainMap.getInstance();
     private final Color color;
+    private final AtomicBoolean isRunning = new AtomicBoolean(true);
 
     private GridElement gridElement;
     private Direction direction;
-    private AtomicBoolean isRunning;
 
-    public Person(GridElement element){
+    public Person(GridElement element) {
         gridElement = element;
         speed = new SecureRandom().nextInt(100, 700);
         color = Color.BLUE;
-        isRunning = new AtomicBoolean(true);
         direction = STRAIGHT;
         setDaemon(true);
     }
 
     @Override
     public void run() {
-        while (isRunning.get() && !isInterrupted()){
+        while (isRunning.get() && !isInterrupted()) {
             move();
             try {
                 sleep(speed);
@@ -45,17 +44,14 @@ public class Person extends Thread {
 
     private void move() {
 
-        if(!isRunning.get()) return;
+        if (!isRunning.get()) return;
 
-        if(gridElement.getCordX() == 0 || gridElement.getCordX() == MAP_HEIGHT - 1) direction = STRAIGHT;
+        if (gridElement.getCordX() == 0 || gridElement.getCordX() == MAP_HEIGHT - 1) direction = STRAIGHT;
 
         int nextX = gridElement.getCordX() + direction.getX();
         int nextY = gridElement.getCordY() + direction.getY();
 
-        System.out.println("X: " + gridElement.getCordX() + " Y: " + gridElement.getCordY());
-
-        GridElement nextElement = map.getGrid().get(nextY).get(nextX);
-        this.setGridElement(nextElement);
+        setGridElement(map.getGrid().get(nextY).get(nextX));
 
         lastMove();
     }
@@ -82,7 +78,7 @@ public class Person extends Thread {
     }
 
     @Override
-    public void interrupt(){
+    public void interrupt() {
         try {
             isRunning.set(false);
             this.join();
