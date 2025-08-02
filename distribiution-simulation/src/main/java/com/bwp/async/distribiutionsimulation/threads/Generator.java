@@ -2,11 +2,10 @@ package com.bwp.async.distribiutionsimulation.threads;
 
 import com.bwp.async.distribiutionsimulation.map.MainMap;
 
-import java.security.SecureRandom;
 import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static com.bwp.async.distribiutionsimulation.util.MapMainValues.MAP_MID_POINT_Y;
+import static com.bwp.async.distribiutionsimulation.util.MapMainValues.S_RAND;
 
 public class Generator extends Thread {
 
@@ -16,7 +15,7 @@ public class Generator extends Thread {
 
     private int limit;
 
-    public Generator(LinkedList<Person> clients){
+    public Generator(LinkedList<Person> clients) {
         isRunning = new AtomicBoolean(true);
         this.setDaemon(true);
         this.clients = clients;
@@ -24,10 +23,10 @@ public class Generator extends Thread {
 
     @Override
     public void run() {
-        while (isRunning.get() && !isInterrupted()){
+        while (isRunning.get() && !isInterrupted()) {
             createClients();
             try {
-                sleep(new SecureRandom().nextInt(200, 1000));
+                sleep(S_RAND.nextInt(200, 1000));
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 System.err.println(this.getName() + " przerwany");
@@ -37,7 +36,7 @@ public class Generator extends Thread {
 
     private synchronized void createClients() {
         if (clients.size() >= limit) return;
-        clients.addLast(new Person(map.getGrid().get(MAP_MID_POINT_Y).get(0)));
+        clients.addLast(new Person(S_RAND.nextInt(50, 2000)));
         clients.getLast().start();
     }
 
@@ -46,7 +45,7 @@ public class Generator extends Thread {
     }
 
     @Override
-    public void interrupt(){
+    public void interrupt() {
         try {
             isRunning.set(false);
             this.join();

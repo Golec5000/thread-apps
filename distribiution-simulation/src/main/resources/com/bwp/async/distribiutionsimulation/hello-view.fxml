@@ -18,6 +18,7 @@
         <Label fx:id="limitThreadLabel" text="Thread limit: 10"/>
         <Label fx:id="generatorStatusLabel" text="Generator: [status todo]"/>
         <Label fx:id="cleanupStatusLabel" text="Czyszczenie: [status todo]"/>
+        <Label fx:id="switchStatusLabel" text="Switch direction:"/>
 
         <Separator/>
 
