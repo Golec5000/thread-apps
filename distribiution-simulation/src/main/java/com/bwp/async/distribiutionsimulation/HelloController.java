@@ -48,6 +48,8 @@ public class HelloController implements Initializable {
         gameEngine = new GameEngine(drawingCanvas);
         gameEngine.setThreadsLabel(threadsLabel);
         gameEngine.setSwitchStatusLabel(switchStatusLabel);
+        gameEngine.setGeneratorStatusLabel(generatorStatusLabel);
+        gameEngine.setCleanupStatusLabel(cleanupStatusLabel);
         gameEngine.start();
 
         maxClientsInput.valueProperty().addListener((observableValue, number, t1) -> {

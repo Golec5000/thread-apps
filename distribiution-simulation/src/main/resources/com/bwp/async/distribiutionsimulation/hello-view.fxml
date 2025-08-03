@@ -14,15 +14,16 @@
     <VBox spacing="15.0" alignment="TOP_LEFT">
         <Label text="Status symulacji:" style="-fx-font-weight: bold;"/>
 
-        <Label fx:id="threadsLabel" text="Wątki klientów: 0"/>
+        <Label fx:id="threadsLabel"/>
         <Label fx:id="limitThreadLabel" text="Thread limit: 10"/>
-        <Label fx:id="generatorStatusLabel" text="Generator: [status todo]"/>
-        <Label fx:id="cleanupStatusLabel" text="Czyszczenie: [status todo]"/>
-        <Label fx:id="switchStatusLabel" text="Switch direction:"/>
+        <Label fx:id="generatorStatusLabel"/>
+        <Label fx:id="cleanupStatusLabel"/>
+        <Label fx:id="switchStatusLabel"/>
 
         <Separator/>
 
         <Label text="Maksymalna liczba klientów:"/>
-        <Slider fx:id="maxClientsInput" min="1" max="50" showTickLabels="true" majorTickUnit="10" showTickMarks="true" blockIncrement="1" value="10" maxWidth="150"/>
+        <Slider fx:id="maxClientsInput" min="1" max="50" showTickLabels="true" majorTickUnit="10" showTickMarks="true"
+                blockIncrement="1" value="10" maxWidth="150"/>
     </VBox>
 </HBox>

@@ -1,9 +1,6 @@
 package com.bwp.async.distribiutionsimulation.map;
 
-import com.bwp.async.distribiutionsimulation.threads.Generator;
 import com.bwp.async.distribiutionsimulation.threads.Person;
-import com.bwp.async.distribiutionsimulation.threads.Remover;
-import com.bwp.async.distribiutionsimulation.threads.Switch;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
@@ -12,25 +9,21 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Label;
 import javafx.util.Duration;
 
-import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static com.bwp.async.distribiutionsimulation.util.MapMainValues.CLIENT_SLOTS;
-import static com.bwp.async.distribiutionsimulation.util.MapMainValues.MAP_SWITCH_DIRECTION;
+import static com.bwp.async.distribiutionsimulation.util.MapMainValues.*;
 
 public class GameEngine {
 
     private final GraphicsContext gc;
     private final MainMap map = MainMap.getInstance();
-    private final LinkedList<Person> clients = new LinkedList<>();
-    private final Generator generator = new Generator(clients);
-    private final Remover remover = new Remover(clients);
-    private final Switch directionSwitch = new Switch();
     private final AtomicBoolean running = new AtomicBoolean(false);
 
     private Timeline gameLoop;
     private Label threadsLabel;
     private Label switchStatusLabel;
+    private Label generatorStatusLabel;
+    private Label cleanupStatusLabel;
 
     public GameEngine(Canvas drawingCanvas) {
         this.gc = drawingCanvas.getGraphicsContext2D();
@@ -43,33 +36,36 @@ public class GameEngine {
 
         // startuje główną pętlę gry (renderowanie)
         gameLoop = new Timeline(new KeyFrame(Duration.millis(16), e -> {
-            map.renderMap(gc, clients);
-            Platform.runLater(() -> threadsLabel.setText("Number of clients: " + clients.size()));
+            map.renderMap(gc, CLIENTS_LIST);
+            Platform.runLater(() -> threadsLabel.setText("Number of clients: " + CLIENTS_LIST.size()));
             Platform.runLater(() -> switchStatusLabel.setText("Switch direction: " + MAP_SWITCH_DIRECTION.get()));
+            Platform.runLater(() -> generatorStatusLabel.setText("Generator: " + GENERATOR.getState().name()));
+            Platform.runLater(() -> cleanupStatusLabel.setText("Remover: " + REMOVER.getState().name()));
         }));
 
         gameLoop.setCycleCount(Timeline.INDEFINITE);
         gameLoop.play();
 
-        generator.start();
-        remover.start();
-        directionSwitch.start();
+        GENERATOR.start();
+        REMOVER.start();
+        DIRECTION_SWITCH.start();
     }
 
     public void stop() {
         running.set(false);
 
-        CLIENT_SLOTS.release();
+        CLIENT_SLOTS.notifyRemover();
+        CLIENT_SLOTS.notifyGenerator();
 
         if (gameLoop != null) gameLoop.stop();
-        if (generator.isAlive()) generator.interrupt();
-        if (remover.isAlive()) remover.interrupt();
-        if (directionSwitch.isAlive()) directionSwitch.interrupt();
+        if (GENERATOR.isAlive()) GENERATOR.interrupt();
+        if (REMOVER.isAlive()) REMOVER.interrupt();
+        if (DIRECTION_SWITCH.isAlive()) DIRECTION_SWITCH.interrupt();
 
         // kończy wszystkie osoby
         synchronized (this) {
-            clients.forEach(Person::interrupt);
-            clients.clear();
+            CLIENTS_LIST.forEach(Person::interrupt);
+            CLIENTS_LIST.clear();
         }
     }
 
@@ -79,5 +75,13 @@ public class GameEngine {
 
     public void setSwitchStatusLabel(Label switchStatusLabel) {
         this.switchStatusLabel = switchStatusLabel;
+    }
+
+    public void setGeneratorStatusLabel(Label generatorStatusLabel) {
+        this.generatorStatusLabel = generatorStatusLabel;
+    }
+
+    public void setCleanupStatusLabel(Label cleanupStatusLabel) {
+        this.cleanupStatusLabel = cleanupStatusLabel;
     }
 }

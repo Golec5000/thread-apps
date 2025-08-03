@@ -1,20 +1,16 @@
 package com.bwp.async.distribiutionsimulation.threads;
 
-import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static com.bwp.async.distribiutionsimulation.util.MapMainValues.CLIENT_SLOTS;
-import static com.bwp.async.distribiutionsimulation.util.MapMainValues.S_RAND;
+import static com.bwp.async.distribiutionsimulation.util.MapMainValues.*;
 
 public class Generator extends Thread {
 
-    private final LinkedList<Person> clients;
     private final AtomicBoolean isRunning;
 
-    public Generator(LinkedList<Person> clients) {
+    public Generator() {
         isRunning = new AtomicBoolean(true);
         this.setDaemon(true);
-        this.clients = clients;
     }
 
     @Override
@@ -26,10 +22,10 @@ public class Generator extends Thread {
 
     private void createClients() {
         try {
-            CLIENT_SLOTS.acquire();
-            Person p = new Person(S_RAND.nextInt(50, 2000));
-            synchronized (clients){
-                clients.addLast(p);
+            CLIENT_SLOTS.acquireGenerator();
+            Person p = new Person(S_RAND.nextInt(50, 750));
+            synchronized (CLIENTS_LIST){
+                CLIENTS_LIST.addLast(p);
             }
             p.start();
         } catch (InterruptedException e) {
@@ -42,6 +38,7 @@ public class Generator extends Thread {
     public void interrupt() {
         try {
             isRunning.set(false);
+            CLIENT_SLOTS.notifyGenerator();
             this.join();
             System.out.println("Generator " + this.getName() + " finish");
         } catch (InterruptedException e) {

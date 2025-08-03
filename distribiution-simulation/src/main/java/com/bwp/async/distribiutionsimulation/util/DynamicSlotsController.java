@@ -1,28 +1,70 @@
 package com.bwp.async.distribiutionsimulation.util;
 
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+import static com.bwp.async.distribiutionsimulation.util.MapMainValues.*;
+
 public class DynamicSlotsController {
-    private int maxSlots;
-    private int currentUsed = 0;
+    private final Lock lock = new ReentrantLock();
+    private final Condition generatorCondition = lock.newCondition();
+    private final Condition removerCondition = lock.newCondition();
+
+    private final AtomicInteger maxSlots;
 
     public DynamicSlotsController(int maxSlots) {
-        this.maxSlots = maxSlots;
+        this.maxSlots = new AtomicInteger(maxSlots);
     }
 
-    public synchronized void acquire() throws InterruptedException {
-        while (currentUsed >= maxSlots) {
-            wait();
+    public void acquireGenerator() throws InterruptedException {
+        lock.lock();
+        try {
+            while (CLIENTS_LIST.size() >= maxSlots.get()) generatorCondition.await();
+        } finally {
+            lock.unlock();
         }
-        currentUsed++;
     }
 
-    public synchronized void release() {
-        currentUsed--;
-        if (currentUsed < 0) currentUsed = 0;
-        notify();
+    public void acquireRemover() throws InterruptedException {
+        lock.lock();
+        try {
+           removerCondition.await();
+        } finally {
+            lock.unlock();
+        }
     }
 
-    public synchronized void setMaxSlots(int newMax) {
-        this.maxSlots = newMax;
-        notify();
+    public void notifyGenerator() {
+        lock.lock();
+        try {
+            generatorCondition.signal();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+
+    public void notifyRemover() {
+        lock.lock();
+        try {
+            removerCondition.signal();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+
+    public void setMaxSlots(int newMax) {
+        lock.lock();
+        try {
+            if (newMax > maxSlots.get()) {
+                generatorCondition.signal();
+            }
+            this.maxSlots.set(newMax);
+        } finally {
+            lock.unlock();
+        }
     }
 }
