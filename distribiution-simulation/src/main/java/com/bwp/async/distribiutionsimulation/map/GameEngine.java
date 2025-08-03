@@ -15,6 +15,7 @@ import javafx.util.Duration;
 import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static com.bwp.async.distribiutionsimulation.util.MapMainValues.CLIENT_SLOTS;
 import static com.bwp.async.distribiutionsimulation.util.MapMainValues.MAP_SWITCH_DIRECTION;
 
 public class GameEngine {
@@ -58,6 +59,8 @@ public class GameEngine {
     public void stop() {
         running.set(false);
 
+        CLIENT_SLOTS.release();
+
         if (gameLoop != null) gameLoop.stop();
         if (generator.isAlive()) generator.interrupt();
         if (remover.isAlive()) remover.interrupt();
@@ -76,9 +79,5 @@ public class GameEngine {
 
     public void setSwitchStatusLabel(Label switchStatusLabel) {
         this.switchStatusLabel = switchStatusLabel;
-    }
-
-    public Generator getGenerator() {
-        return generator;
     }
 }

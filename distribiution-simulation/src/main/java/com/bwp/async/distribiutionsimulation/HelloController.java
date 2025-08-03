@@ -12,8 +12,7 @@ import javafx.scene.control.Slider;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-import static com.bwp.async.distribiutionsimulation.util.MapMainValues.MAP_HEIGHT;
-import static com.bwp.async.distribiutionsimulation.util.MapMainValues.MAP_WIDTH;
+import static com.bwp.async.distribiutionsimulation.util.MapMainValues.*;
 
 public class HelloController implements Initializable {
 
@@ -49,12 +48,11 @@ public class HelloController implements Initializable {
         gameEngine = new GameEngine(drawingCanvas);
         gameEngine.setThreadsLabel(threadsLabel);
         gameEngine.setSwitchStatusLabel(switchStatusLabel);
-        gameEngine.getGenerator().setLimit((int) maxClientsInput.getValue());
         gameEngine.start();
 
         maxClientsInput.valueProperty().addListener((observableValue, number, t1) -> {
             int limit = (int) maxClientsInput.getValue();
-            gameEngine.getGenerator().setLimit(limit);
+            CLIENT_SLOTS.setMaxSlots(limit);
             Platform.runLater(() -> limitThreadLabel.setText("Thread limit: " + limit));
         });
     }

@@ -19,4 +19,7 @@ public class MapMainValues {
     public static final Color DEFAULT_COLOR = Color.CORNSILK;
 
     public static AtomicReference<Direction> MAP_SWITCH_DIRECTION;
+
+    public static final DynamicSlotsController CLIENT_SLOTS = new DynamicSlotsController(10);
+    public static final Object REMOVER_LOCK = new Object();
 }

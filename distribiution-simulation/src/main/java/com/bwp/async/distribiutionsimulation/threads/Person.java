@@ -71,6 +71,7 @@ public class Person extends Thread {
     private void lastMove() {
         if (gridElement.getCordX() < MAP_WIDTH - 1) return;
         isRunning.set(false);
+        CLIENT_SLOTS.release();
     }
 
     public Color getColor() {
