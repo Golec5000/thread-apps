@@ -1,7 +1,6 @@
 package com.bwp.async.distribiutionsimulation.map;
 
 import com.bwp.async.distribiutionsimulation.threads.Person;
-import com.bwp.async.distribiutionsimulation.util.Direction;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 

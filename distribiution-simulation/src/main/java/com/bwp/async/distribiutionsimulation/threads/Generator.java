@@ -1,50 +1,44 @@
 package com.bwp.async.distribiutionsimulation.threads;
 
-import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static com.bwp.async.distribiutionsimulation.util.MapMainValues.S_RAND;
+import static com.bwp.async.distribiutionsimulation.util.MapMainValues.*;
 
 public class Generator extends Thread {
 
-    private final LinkedList<Person> clients;
     private final AtomicBoolean isRunning;
 
-    private int limit;
-
-    public Generator(LinkedList<Person> clients) {
+    public Generator() {
         isRunning = new AtomicBoolean(true);
         this.setDaemon(true);
-        this.clients = clients;
     }
 
     @Override
     public void run() {
         while (isRunning.get() && !isInterrupted()) {
             createClients();
-            try {
-                sleep(S_RAND.nextInt(200, 1000));
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                System.err.println(this.getName() + " przerwany");
-            }
         }
     }
 
-    private synchronized void createClients() {
-        if (clients.size() >= limit) return;
-        clients.addLast(new Person(S_RAND.nextInt(50, 2000)));
-        clients.getLast().start();
-    }
-
-    public void setLimit(int limit) {
-        this.limit = limit;
+    private void createClients() {
+        try {
+            CLIENT_SLOTS.acquireGenerator();
+            Person p = new Person(S_RAND.nextInt(50, 750));
+            synchronized (CLIENTS_LIST){
+                CLIENTS_LIST.addLast(p);
+            }
+            p.start();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            System.err.println("Generator interrupted");
+        }
     }
 
     @Override
     public void interrupt() {
         try {
             isRunning.set(false);
+            CLIENT_SLOTS.notifyGenerator();
             this.join();
             System.out.println("Generator " + this.getName() + " finish");
         } catch (InterruptedException e) {

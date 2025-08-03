@@ -1,42 +1,50 @@
 package com.bwp.async.distribiutionsimulation.threads;
 
-import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+import static com.bwp.async.distribiutionsimulation.util.MapMainValues.CLIENTS_LIST;
+import static com.bwp.async.distribiutionsimulation.util.MapMainValues.CLIENT_SLOTS;
 
 public class Remover extends Thread {
 
-    private final LinkedList<Person> clients;
     private final AtomicBoolean isRunning;
 
-    public Remover(LinkedList<Person> clients) {
+    public Remover() {
         this.isRunning = new AtomicBoolean(true);
         this.setDaemon(true);
-        this.clients = clients;
     }
 
     @Override
     public void run() {
         while (isRunning.get() && !isInterrupted()) {
-            synchronized (clients) {
-                clients.removeIf(client -> !client.isAlive());
-            }
             try {
-                sleep(200);
+                CLIENT_SLOTS.acquireRemover();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                System.err.println(this.getName() + " przerwany");
+                System.err.println("Remover interrupted");
+            }
+
+            synchronized (CLIENTS_LIST) {
+                if (CLIENTS_LIST.removeIf(client -> !client.isAlive())) {
+                    CLIENT_SLOTS.notifyGenerator();
+                }
             }
         }
     }
+
 
     @Override
     public void interrupt() {
         try {
             isRunning.set(false);
+            CLIENT_SLOTS.notifyRemover();
             this.join();
             System.out.println("Remover " + this.getName() + " finish");
         } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+            currentThread().interrupt();
             System.err.println("Błąd przy joinowaniu Remover.");
         }
     }
