@@ -9,6 +9,7 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Label;
 import javafx.util.Duration;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.bwp.async.distribiutionsimulation.util.MapMainValues.*;
@@ -58,13 +59,13 @@ public class GameEngine {
         CLIENT_SLOTS.notifyGenerator();
 
         if (gameLoop != null) gameLoop.stop();
-        if (GENERATOR.isAlive()) GENERATOR.interrupt();
-        if (REMOVER.isAlive()) REMOVER.interrupt();
-        if (DIRECTION_SWITCH.isAlive()) DIRECTION_SWITCH.interrupt();
+        if (GENERATOR.isAlive()) GENERATOR.stopThread();
+        if (REMOVER.isAlive()) REMOVER.stopThread();
+        if (DIRECTION_SWITCH.isAlive()) DIRECTION_SWITCH.stopThread();
 
         // kończy wszystkie osoby
         synchronized (this) {
-            CLIENTS_LIST.forEach(Person::interrupt);
+            CLIENTS_LIST.forEach(Person::stopThread);
             CLIENTS_LIST.clear();
         }
     }

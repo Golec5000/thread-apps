@@ -36,8 +36,7 @@ public class Switch extends Thread {
         }
     }
 
-    @Override
-    public void interrupt() {
+    public void stopThread() {
         try {
             isRunning.set(false);
             this.join();

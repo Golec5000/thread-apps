@@ -3,6 +3,7 @@ package com.bwp.async.distribiutionsimulation.threads;
 import com.bwp.async.distribiutionsimulation.map.GridElement;
 import com.bwp.async.distribiutionsimulation.map.MainMap;
 import com.bwp.async.distribiutionsimulation.util.Direction;
+import com.bwp.async.distribiutionsimulation.util.MapMainValues;
 import javafx.scene.paint.Color;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -23,18 +24,19 @@ public class Person extends Thread {
 
     public Person(int speed) {
         this.speed = speed;
-        this.color = Color.BLUE;
+        this.color = MapMainValues.pickRngColor();
         this.direction = STRAIGHT;
         setDaemon(true);
         this.gridElement = map.getGrid().get(MAP_MID_POINT_Y).get(0);
+        this.gridElement.setOccupied(true);
         this.hasCrossedSwitch = false;
     }
 
     @Override
     public void run() {
         while (isRunning.get() && !isInterrupted()) {
-            move();
             try {
+                move();
                 sleep(speed);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -43,7 +45,7 @@ public class Person extends Thread {
         }
     }
 
-    private void move() {
+    private void move() throws InterruptedException {
 
         if (!isRunning.get()) return;
 
@@ -52,10 +54,19 @@ public class Person extends Thread {
         int nextX = gridElement.getCordX() + direction.getX();
         int nextY = gridElement.getCordY() + direction.getY();
 
-        setGridElement(map.getGrid().get(nextY).get(nextX));
+        GridElement currElement = this.gridElement;
+        GridElement nextElement = map.getGrid().get(nextY).get(nextX);
 
+        // używamy blokady z GridElement
+        nextElement.acquireElement(this); // ten wątek poczeka, jeśli zajęte
+
+        // bezpieczne — mamy już dostęp do pola
+        this.gridElement = nextElement;
+
+        currElement.notifyElement(); // zwolnij poprzednie pole
+
+        CLIENT_SLOTS.notifyGenerator();
         setClientDirection();
-
         lastMove();
     }
 
@@ -72,6 +83,7 @@ public class Person extends Thread {
         if (gridElement.getCordX() < MAP_WIDTH - 1) return;
         isRunning.set(false);
         CLIENT_SLOTS.notifyRemover();
+        this.gridElement.notifyElement();
     }
 
     public Color getColor() {
@@ -82,14 +94,15 @@ public class Person extends Thread {
         return gridElement;
     }
 
-    public void setGridElement(GridElement gridElement) {
-        this.gridElement = gridElement;
-    }
 
-    @Override
-    public void interrupt() {
+    public void stopThread() {
         try {
             isRunning.set(false);
+            this.gridElement.notifyElement();
+            map.getGrid()
+                    .get(gridElement.getCordY() + direction.getY())
+                    .get(gridElement.getCordX() + direction.getX())
+                    .notifyElement();
             this.join();
             System.out.println("Person " + this.getName() + " finish");
         } catch (InterruptedException e) {

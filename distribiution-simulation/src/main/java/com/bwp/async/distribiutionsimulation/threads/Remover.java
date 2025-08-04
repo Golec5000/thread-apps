@@ -1,9 +1,6 @@
 package com.bwp.async.distribiutionsimulation.threads;
 
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import static com.bwp.async.distribiutionsimulation.util.MapMainValues.CLIENTS_LIST;
 import static com.bwp.async.distribiutionsimulation.util.MapMainValues.CLIENT_SLOTS;
@@ -36,8 +33,8 @@ public class Remover extends Thread {
     }
 
 
-    @Override
-    public void interrupt() {
+
+    public void stopThread() {
         try {
             isRunning.set(false);
             CLIENT_SLOTS.notifyRemover();

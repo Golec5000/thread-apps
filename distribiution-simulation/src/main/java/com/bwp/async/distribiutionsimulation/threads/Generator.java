@@ -22,20 +22,16 @@ public class Generator extends Thread {
 
     private void createClients() {
         try {
-            CLIENT_SLOTS.acquireGenerator();
-            Person p = new Person(S_RAND.nextInt(50, 750));
-            synchronized (CLIENTS_LIST){
-                CLIENTS_LIST.addLast(p);
-            }
-            p.start();
+            CLIENT_SLOTS.acquireGenerator(new Person(S_RAND.nextInt(50, 600)));
+            sleep(S_RAND.nextInt(100, 500));
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             System.err.println("Generator interrupted");
         }
     }
 
-    @Override
-    public void interrupt() {
+
+    public void stopThread() {
         try {
             isRunning.set(false);
             CLIENT_SLOTS.notifyGenerator();

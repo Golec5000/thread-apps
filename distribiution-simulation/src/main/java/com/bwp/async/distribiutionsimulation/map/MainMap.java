@@ -74,11 +74,15 @@ public class MainMap {
     public void renderMap(GraphicsContext gc, LinkedList<Person> clients) {
         gc.clearRect(0, 0, gc.getCanvas().getWidth(), gc.getCanvas().getHeight());
 
-        renderLanes();
-        grid.get(MAP_MID_POINT_Y).get(MAP_MID_POINT_X).setColor(MAP_SWITCH_DIRECTION.get().getColor());
-        clients.stream().filter(Person::isAlive)
-                .forEach(client -> client.getGridElement().setColor(client.getColor()));
-        grid.forEach(row -> row.forEach(el -> setElementInGrid(gc, el)));
+        try {
+            renderLanes();
+            grid.get(MAP_MID_POINT_Y).get(MAP_MID_POINT_X).setColor(MAP_SWITCH_DIRECTION.get().getColor());
+            clients.stream().filter(Person::isAlive)
+                    .forEach(client -> client.getGridElement().setColor(client.getColor()));
+            grid.forEach(row -> row.forEach(el -> setElementInGrid(gc, el)));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void setElementInGrid(GraphicsContext gc, GridElement el) {
